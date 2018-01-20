@@ -114,8 +114,8 @@ byte maxRevSpeed1 = 0;
 byte maxRevSpeed2 = 0;
 
 //Value to determine Beginner Mode
-bool begineerMode = false;
-byte buttonCounter = 300;
+bool beginnerMode = false;
+int buttonCounter = 300;
 
 //****************************************************************************
 
@@ -193,7 +193,7 @@ void loop()
     Serial.println(maxFwdSpeed2);
   };
 
-  buttonPressedIndicator = 0; // reset button pressed indicator // XSZA find and remove debounce here?
+  buttonPressedIndicator = 0; // reset button pressed indicator 
  
 
   // poll the motion buttons (pins 2-6):
@@ -221,11 +221,17 @@ if (beginnerMode == true)
 {
    if(digitalRead(3) == LOW)
    {
+    buttonPressedIndicator = 1;
     while(buttonCounter != 0)
     {
       accelerateForward();
-      delay(5);
       buttonCounter--; 
+      Serial.print("The button state is ");
+      Serial.print(digitalRead(3));
+      Serial.print("\t Button counter: ");
+      Serial.print(buttonCounter);
+      Serial.print("\n");
+      delay(5);
       if (digitalRead(3) == LOW)
       {
         buttonCounter = 300;
@@ -234,7 +240,7 @@ if (beginnerMode == true)
    }
 }
 
-#####################################################################################
+//#####################################################################################
 
   // Compute equivalent motor speeds so that left vs right can be compared.
   if ((motorControl1 == 0 or motorControl1 == deadStop1) and (motorControl2 == 0 or motorControl2 == deadStop2))
@@ -1156,6 +1162,7 @@ void decelerateFunction() {
 }; //2
 
 // ****************************************************
+
 
 
 
