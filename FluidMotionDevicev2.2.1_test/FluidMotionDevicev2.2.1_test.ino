@@ -152,20 +152,15 @@ void setup()
   { // To cycle this, power must also be cycled
     beginnerMode = true;
 
-    // if (ndebug == 1){
+    if (ndebug == 1){
     Serial.println("Beginner Mode: On");
-    // }
+    }
   }
 
 };
 
 void loop()
 {
-  if (beginnerMode = true)
-  {
-    int  index = 5;
-    int hysteresis = 5;
-  }
 
 
   // check throttle potentiometer setting:
@@ -237,11 +232,12 @@ void loop()
     };
   };
 
-int index;
-int hysteresis;
+
 
   if (beginnerMode == true)
   {
+    int index = 5;
+    int hysteresis = 5;
     buttonState = digitalRead(3); // Only reads forward button for beginner mode
     Serial.print("Button State: ");
     Serial.print(buttonState);
