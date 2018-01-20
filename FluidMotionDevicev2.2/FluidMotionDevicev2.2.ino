@@ -43,6 +43,7 @@
 #include <Servo.h>
 #include <SoftwareSerial.h>
 
+
 Servo Sabertooth; // We'll name the Sabertooth object Sabertooth.
 // For how to configure the Sabertooth, see the DIP Switch Wizard for
 //   http://www.dimensionengineering.com/datasheets/SabertoothDIPWizard/start.htm
@@ -150,8 +151,9 @@ void setup()
   
   if ( digitalRead(12) == LOW ){ // To cycle this, power must also be cycled
     beginnerMode = true;
-    int hysteresis = 10;
-    int index = 5; // Start mid loop
+    int hysteresis[5] = {};
+    int index = 0; 
+    int runningSum = 0;
     
    // if (ndebug == 1){
     Serial.println("Beginner Mode: On");
@@ -160,9 +162,11 @@ void setup()
   
 };
 
+
+
 void loop()
 {
-  
+
   // check throttle potentiometer setting:
   potValue = analogRead(A0);
 
@@ -236,32 +240,29 @@ if (beginnerMode == false)
 if (beginnerMode == true)
 {
   buttonState = digitalRead(3); // Only reads forward button for beginner mode
-  Serial.print("Button State: ");
-  Serial.print(buttonState);
-  Serial.print("\n");
 
-
-  if (index <= 10)
+   hysteresis[index] = buttonState;
+   index ++;
+   
+   Serial.print(hysteresis[index]);
+   
+  if (index == 4)
   {
-    index = 0;
-    hysteresis = 0;
-    Serial.print("\n Starting at the beginning of hysteresis");
-  }
-  if (index > 10)
-  {
-   hysteresis += buttonState;
-  }
-
-  if (hysteresis < 10)
-  {
-    buttonState = LOW;
-  }
-  
-  if (buttonState == LOW)
-  {
-    buttonPressedIndicator++; // This might also add a delay
-    buttonPressedFunction(3);
-  }
+    for (int i = 0; i < 4; i++)
+    {
+      runningSum += hysteresis[i];
+    }
+    if (runnningSum < 5)
+    {
+     buttonPressedIndicator++;
+     buttonPressedFunction(3);
+     runningSum = 0;
+     index = 0;
+    }
+    else
+    {
+      index = 0;
+    }
  
  };
 
