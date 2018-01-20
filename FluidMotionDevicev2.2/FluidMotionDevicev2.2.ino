@@ -74,7 +74,7 @@ SoftwareSerial mySerial(10, 11); // RX, TX
 
 //*********************************************************************************
 //*** Adjustable parameters:                                                     **
-const byte ndebug      = 0; //*** 0=run (debug messages off) 1=debug messages on **
+const byte ndebug      = 1; //*** 0=run (debug messages off) 1=debug messages on **
 const byte accelFactor = 2; //*** accelerate increment                           **
 const byte decelFactor = 4; //*** decelerate increment                           **
 const byte trimSens    = 6;//*** trim sensitivity: 128 = highest sensitivity     **
@@ -226,16 +226,20 @@ if (beginnerMode == true)
     {
       accelerateForward();
       buttonCounter--; 
-      Serial.print("The button state is ");
-      Serial.print(digitalRead(3));
-      Serial.print("\t Button counter: ");
-      Serial.print(buttonCounter);
-      Serial.print("\n");
       delay(5);
-      if (digitalRead(3) == LOW)
+      if (ndebug == 1)
       {
-        buttonCounter = 300;
+        Serial.print("The button state is ");
+        Serial.print(digitalRead(3));
+        Serial.print("\t Button counter: ");
+        Serial.print(buttonCounter);
+        Serial.print("\n");
       }
+      if (digitalRead(3) == LOW) 
+      {
+      buttonCounter = 300;
+      }      
+      
     }
    }
 }
