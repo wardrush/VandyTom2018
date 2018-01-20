@@ -74,7 +74,7 @@ SoftwareSerial mySerial(10, 11); // RX, TX
 
 //*********************************************************************************
 //*** Adjustable parameters:                                                     **
-const byte ndebug      = 1; //*** 0=run (debug messages off) 1=debug messages on **
+const byte ndebug      = 0; //*** 0=run (debug messages off) 1=debug messages on **
 const byte accelFactor = 2; //*** accelerate increment                           **
 const byte decelFactor = 4; //*** decelerate increment                           **
 const byte trimSens    = 6;//*** trim sensitivity: 128 = highest sensitivity     **
@@ -115,7 +115,6 @@ byte maxRevSpeed2 = 0;
 
 //Value to determine Beginner Mode
 bool beginnerMode = false;
-int buttonCounter = 300;
 
 //****************************************************************************
 
@@ -148,15 +147,22 @@ void setup()
   digitalWrite(12, HIGH);
 
   Sabertooth.attach(1);
-
-  if ( digitalRead(12) == LOW ){ //XSZA check this out
+  
+  if ( digitalRead(12) == LOW ){ // To cycle this, power must also be cycled
     beginnerMode = true;
+    int hysteresis = 10;
+    int index = 5; // Start mid loop
+    
+   // if (ndebug == 1){
+    Serial.println("Beginner Mode: On");
+   // }
   }
   
 };
 
 void loop()
 {
+  
   // check throttle potentiometer setting:
   potValue = analogRead(A0);
 
@@ -193,12 +199,21 @@ void loop()
     Serial.println(maxFwdSpeed2);
   };
 
+if (beginnerMode == false)
+{
   buttonPressedIndicator = 0; // reset button pressed indicator 
- 
+}
+
+if (buttonPressedIndicator > 0)
+{
+  buttonPressedIndicator--;
+}
+
 
   // poll the motion buttons (pins 2-6):
   // Note that having E-stop assigned to pin #2 with break after processing ensures that it will
   // always have first priority.
+  
 if (beginnerMode == false)
   {
   for (buttonPinNumber = 2; buttonPinNumber <= 6; ++buttonPinNumber)
@@ -217,32 +232,39 @@ if (beginnerMode == false)
   };
   };
 
+
 if (beginnerMode == true)
 {
-   if(digitalRead(3) == LOW)
-   {
-    buttonPressedIndicator = 1;
-    while(buttonCounter != 0)
-    {
-      accelerateForward();
-      buttonCounter--; 
-      delay(5);
-      if (ndebug == 1)
-      {
-        Serial.print("The button state is ");
-        Serial.print(digitalRead(3));
-        Serial.print("\t Button counter: ");
-        Serial.print(buttonCounter);
-        Serial.print("\n");
-      }
-      if (digitalRead(3) == LOW) 
-      {
-      buttonCounter = 300;
-      }      
-      
-    }
-   }
-}
+  buttonState = digitalRead(3); // Only reads forward button for beginner mode
+  Serial.print("Button State: ");
+  Serial.print(buttonState);
+  Serial.print("\n");
+
+
+  if (index <= 10)
+  {
+    index = 0;
+    hysteresis = 0;
+    Serial.print("\n Starting at the beginning of hysteresis");
+  }
+  if (index > 10)
+  {
+   hysteresis += buttonState;
+  }
+
+  if (hysteresis < 10)
+  {
+    buttonState = LOW;
+  }
+  
+  if (buttonState == LOW)
+  {
+    buttonPressedIndicator++; // This might also add a delay
+    buttonPressedFunction(3);
+  }
+ 
+ };
+
 
 //#####################################################################################
 
