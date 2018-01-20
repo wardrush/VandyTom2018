@@ -59,7 +59,7 @@ Servo Sabertooth; // We'll name the Sabertooth object Sabertooth.
 //   D4             ->  Reverse Button Signal | buttons will be connected to a ground bus, which
 //   D5             ->  Left Button Signal    | will in turn be connected to the gnd pin of the
 //   D6             ->  Right Button Signal   | Arduino.
-//   D12            ->  Beginner Mode Switch 
+//   D12            ->  Beginner Mode Switch
 
 //
 //   0V             ->  Governor/potentiometer lead 1 - black (ground)
@@ -147,22 +147,27 @@ void setup()
   digitalWrite(12, HIGH);
 
   Sabertooth.attach(1);
-  
-  if ( digitalRead(12) == LOW ){ // To cycle this, power must also be cycled
+
+  if (digitalRead(12) == LOW ) 
+  { // To cycle this, power must also be cycled
     beginnerMode = true;
-    int hysteresis = 10;
-    int index = 5; // Start mid loop
-    
-   // if (ndebug == 1){
+
+    // if (ndebug == 1){
     Serial.println("Beginner Mode: On");
-   // }
+    // }
   }
-  
+
 };
 
 void loop()
 {
-  
+  if (beginnerMode = true)
+  {
+    int  index = 5;
+    int hysteresis = 5;
+  }
+
+
   // check throttle potentiometer setting:
   potValue = analogRead(A0);
 
@@ -199,74 +204,75 @@ void loop()
     Serial.println(maxFwdSpeed2);
   };
 
-if (beginnerMode == false)
-{
-  buttonPressedIndicator = 0; // reset button pressed indicator 
-}
+  if (beginnerMode == false)
+  {
+    buttonPressedIndicator = 0; // reset button pressed indicator
+  }
 
-if (buttonPressedIndicator > 0)
-{
-  buttonPressedIndicator--;
-}
+  if (buttonPressedIndicator > 0)
+  {
+    buttonPressedIndicator--;
+  }
 
 
   // poll the motion buttons (pins 2-6):
   // Note that having E-stop assigned to pin #2 with break after processing ensures that it will
   // always have first priority.
-  
-if (beginnerMode == false)
+
+  if (beginnerMode == false)
   {
-  for (buttonPinNumber = 2; buttonPinNumber <= 6; ++buttonPinNumber)
-  {
-    buttonState = digitalRead(buttonPinNumber);
-    if (buttonState == LOW)
+    for (buttonPinNumber = 2; buttonPinNumber <= 6; ++buttonPinNumber)
     {
-      buttonPressedIndicator = ++buttonPressedIndicator;
-      buttonPressedFunction(buttonPinNumber);
-      if (ndebug == 1)
+      buttonState = digitalRead(buttonPinNumber);
+      if (buttonState == LOW)
       {
-        Serial.println("Button pressed - Breaking loop ***" );
+        buttonPressedIndicator = ++buttonPressedIndicator;
+        buttonPressedFunction(buttonPinNumber);
+        if (ndebug == 1)
+        {
+          Serial.println("Button pressed - Breaking loop ***" );
+        };
+        break;
       };
-      break;
     };
   };
+
+
+  if (beginnerMode == true)
+  {
+    buttonState = digitalRead(3); // Only reads forward button for beginner mode
+    Serial.print("Button State: ");
+    Serial.print(buttonState);
+    Serial.print("\n");
+
+
+    if (index <= 10)
+    {
+      index = 0;
+      hysteresis = 0;
+      Serial.print("\n Starting at the beginning of hysteresis");
+    }
+
+    if (index > 10)  //XSZA
+    {
+      hysteresis += buttonState;
+    }
+
+    if (hysteresis < 10)
+    {
+      buttonState = LOW;
+    }
+
+    if (buttonState == LOW)
+    {
+      buttonPressedIndicator++; // This might also add a delay
+      buttonPressedFunction(3);
+    }
+
   };
 
 
-if (beginnerMode == true)
-{
-  buttonState = digitalRead(3); // Only reads forward button for beginner mode
-  Serial.print("Button State: ");
-  Serial.print(buttonState);
-  Serial.print("\n");
-
-
-  if (index <= 10)
-  {
-    index = 0;
-    hysteresis = 0;
-    Serial.print("\n Starting at the beginning of hysteresis");
-  }
-  if (index > 10)
-  {
-   hysteresis += buttonState;
-  }
-
-  if (hysteresis < 10)
-  {
-    buttonState = LOW;
-  }
-  
-  if (buttonState == LOW)
-  {
-    buttonPressedIndicator++; // This might also add a delay
-    buttonPressedFunction(3);
-  }
- 
- };
-
-
-//#####################################################################################
+  //#####################################################################################
 
   // Compute equivalent motor speeds so that left vs right can be compared.
   if ((motorControl1 == 0 or motorControl1 == deadStop1) and (motorControl2 == 0 or motorControl2 == deadStop2))
