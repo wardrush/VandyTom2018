@@ -115,6 +115,7 @@ byte maxRevSpeed2 = 0;
 
 //Value to determine Beginner Mode
 bool begineerMode = false;
+byte buttonCounter = 300;
 
 //****************************************************************************
 
@@ -192,8 +193,6 @@ void loop()
     Serial.println(maxFwdSpeed2);
   };
 
-  ################################################################################
-
   buttonPressedIndicator = 0; // reset button pressed indicator // XSZA find and remove debounce here?
  
 
@@ -220,15 +219,19 @@ if (beginnerMode == false)
 
 if (beginnerMode == true)
 {
-   for (buttonPinNumber = 2; buttonPinNumber <= 6; ++buttonPinNumber)
-  {
-    buttonState = digitalRead(buttonPinNumber);
-    if (buttonState == LOW | 
+   if(digitalRead(3) == LOW)
+   {
+    while(buttonCounter != 0)
     {
-      buttonPressedIndicator = ++buttonPressedIndicator;
-      buttonPressedFunction(buttonPinNumber);
+      accelerateForward();
+      delay(5);
+      buttonCounter--; 
+      if (digitalRead(3) == LOW)
+      {
+        buttonCounter = 300;
+      }
     }
-  }
+   }
 }
 
 #####################################################################################
@@ -303,8 +306,6 @@ if (beginnerMode == true)
     Serial.println(maxFwdSpeed2 - motorControl2);
   };
 
-###################################################################################################
-
 
   if (buttonPressedIndicator == 0)
   { // 0 If no buttons have been pressed decelerate.
@@ -329,7 +330,6 @@ if (beginnerMode == true)
     sendCommandFunction();
   }; // 0
 
-  ############################################################################################
 
   // This just blinks the LED once to indicate the completion of each iteration of the loop.
   digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
