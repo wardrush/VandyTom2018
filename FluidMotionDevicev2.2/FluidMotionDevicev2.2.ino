@@ -38,6 +38,7 @@
 // * Digital pin 5 - Left turn button
 // * Digital pin 6 - Right turn Button
 // * Digital pin 11 - Serial output to Sabertooth
+// * Digital pin 12 - Beginner mode on/off switch
 
 #include <Servo.h>
 #include <SoftwareSerial.h>
@@ -58,6 +59,7 @@ Servo Sabertooth; // We'll name the Sabertooth object Sabertooth.
 //   D4             ->  Reverse Button Signal | buttons will be connected to a ground bus, which
 //   D5             ->  Left Button Signal    | will in turn be connected to the gnd pin of the
 //   D6             ->  Right Button Signal   | Arduino.
+//   D12            ->  Beginner Mode Switch 
 
 //
 //   0V             ->  Governor/potentiometer lead 1 - black (ground)
@@ -75,7 +77,7 @@ SoftwareSerial mySerial(10, 11); // RX, TX
 const byte ndebug      = 0; //*** 0=run (debug messages off) 1=debug messages on **
 const byte accelFactor = 2; //*** accelerate increment                           **
 const byte decelFactor = 4; //*** decelerate increment                           **
-const byte trimSens    = 6;//*** trim sensitivity: 128 = highest sensitivity    **
+const byte trimSens    = 6;//*** trim sensitivity: 128 = highest sensitivity     **
 //*********************************************************************************
 
 // These constants shouldn't change.
@@ -100,7 +102,7 @@ byte  direction2 = 1;
 
 byte buttonState = 0;        // value read from the button
 byte buttonPinNumber;        // input pin associated with this button
-byte buttonPressedIndicator = 0; // Flag to indicate if any button pressed or not
+byte buttonPressedIndicator = 0; // Flag to indicate if any button pressed or not // XSZA this value will likely be important for Beginner mode
 
 float potValue   = 0;     // value read from the potentiometer
 int   trimAdjustment = 0;
@@ -110,6 +112,9 @@ byte maxFwdSpeed1 = 0;
 byte maxFwdSpeed2 = 0;
 byte maxRevSpeed1 = 0;
 byte maxRevSpeed2 = 0;
+
+//Value to determine Beginner Mode
+bool begineerMode = false;
 
 //****************************************************************************
 
@@ -138,8 +143,15 @@ void setup()
   pinMode(6, INPUT_PULLUP); // Right
   digitalWrite(6, HIGH);
 
+  pinMode(12, INPUT_PULLUP); // Beginner mode switch
+  digitalWrite(12, HIGH);
+
   Sabertooth.attach(1);
 
+  if ( digitalRead(12) == LOW ){ //XSZA check this out
+    beginnerMode = true;
+  }
+  
 };
 
 void loop()
@@ -180,12 +192,16 @@ void loop()
     Serial.println(maxFwdSpeed2);
   };
 
-  buttonPressedIndicator = 0; // reset button pressed indicator
+  ################################################################################
+
+  buttonPressedIndicator = 0; // reset button pressed indicator // XSZA find and remove debounce here?
+ 
 
   // poll the motion buttons (pins 2-6):
   // Note that having E-stop assigned to pin #2 with break after processing ensures that it will
   // always have first priority.
-
+if (beginnerMode == false)
+  {
   for (buttonPinNumber = 2; buttonPinNumber <= 6; ++buttonPinNumber)
   {
     buttonState = digitalRead(buttonPinNumber);
@@ -200,6 +216,22 @@ void loop()
       break;
     };
   };
+  };
+
+if (beginnerMode == true)
+{
+   for (buttonPinNumber = 2; buttonPinNumber <= 6; ++buttonPinNumber)
+  {
+    buttonState = digitalRead(buttonPinNumber);
+    if (buttonState == LOW | 
+    {
+      buttonPressedIndicator = ++buttonPressedIndicator;
+      buttonPressedFunction(buttonPinNumber);
+    }
+  }
+}
+
+#####################################################################################
 
   // Compute equivalent motor speeds so that left vs right can be compared.
   if ((motorControl1 == 0 or motorControl1 == deadStop1) and (motorControl2 == 0 or motorControl2 == deadStop2))
@@ -271,6 +303,9 @@ void loop()
     Serial.println(maxFwdSpeed2 - motorControl2);
   };
 
+###################################################################################################
+
+
   if (buttonPressedIndicator == 0)
   { // 0 If no buttons have been pressed decelerate.
 
@@ -293,6 +328,8 @@ void loop()
     }; //1
     sendCommandFunction();
   }; // 0
+
+  ############################################################################################
 
   // This just blinks the LED once to indicate the completion of each iteration of the loop.
   digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
