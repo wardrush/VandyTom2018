@@ -22,6 +22,7 @@
 */
 
 /* v2.2 6/3/2015 - adds logic for steering left/right trim */
+/* v2.2.1 1/21/2018 - adds beginner mode for intermittent tap input */
 
 // The circuit:
 // * analog pin 0 - throttle/governor potentiometer signal (middle/white wire).
@@ -39,6 +40,7 @@
 // * Digital pin 6 - Right turn Button
 // * Digital pin 11 - Serial output to Sabertooth
 // * Digital pin 12 - Beginner mode on/off switch
+
 
 #include <Servo.h>
 #include <SoftwareSerial.h>
@@ -60,7 +62,6 @@ Servo Sabertooth; // We'll name the Sabertooth object Sabertooth.
 //   D5             ->  Left Button Signal    | will in turn be connected to the gnd pin of the
 //   D6             ->  Right Button Signal   | Arduino.
 //   D12            ->  Beginner Mode Switch
-
 //
 //   0V             ->  Governor/potentiometer lead 1 - black (ground)
 //   A0             ->  Governor/potentiometer lead 2 - white (signal)
@@ -77,7 +78,8 @@ SoftwareSerial mySerial(10, 11); // RX, TX
 const byte ndebug      = 0; //*** 0=run (debug messages off) 1=debug messages on **
 const byte accelFactor = 2; //*** accelerate increment                           **
 const byte decelFactor = 4; //*** decelerate increment                           **
-const byte trimSens    = 6;//*** trim sensitivity: 128 = highest sensitivity     **
+const byte trimSens    = 6;//*** trim sensitivity: 128 = highest sensitivity     **                             
+const byte beginnerModeDelay = 15; // changes how long beginner mode will go     **
 //*********************************************************************************
 
 // These constants shouldn't change.
@@ -148,26 +150,18 @@ void setup()
 
   Sabertooth.attach(1);
 
-  if (digitalRead(12) == LOW ) 
+  if (digitalRead(12) == LOW )
   { // To cycle this, power must also be cycled
     beginnerMode = true;
-
-    // if (ndebug == 1){
-    Serial.println("Beginner Mode: On");
-    // }
+    if (ndebug == 1) {
+      Serial.println("Beginner Mode: On");
+    }
   }
 
 };
 
 void loop()
 {
-  if (beginnerMode = true)
-  {
-    int  index = 5;
-    int hysteresis = 5;
-  }
-
-
   // check throttle potentiometer setting:
   potValue = analogRead(A0);
 
@@ -209,7 +203,8 @@ void loop()
     buttonPressedIndicator = 0; // reset button pressed indicator
   }
 
-  if (buttonPressedIndicator > 0)
+
+  if (beginnerMode == true & buttonPressedIndicator > 0)
   {
     buttonPressedIndicator--;
   }
@@ -237,41 +232,27 @@ void loop()
     };
   };
 
-int index;
-int hysteresis;
 
   if (beginnerMode == true)
   {
-    buttonState = digitalRead(3); // Only reads forward button for beginner mode
-    Serial.print("Button State: ");
-    Serial.print(buttonState);
-    Serial.print("\n");
 
-
-    if (index <= 10)
+    for (buttonPinNumber = 2; buttonPinNumber <= 6; ++buttonPinNumber)
     {
-      index = 0;
-      hysteresis = 0;
-      Serial.print("\n Starting at the beginning of hysteresis");
-    }
-    
-        if (index > 10)  //XSZA
-    {
-      hysteresis += buttonState;
-    }
-
-    if (hysteresis < 10)
-    {
-      buttonState = LOW;
-    }
-
-    if (buttonState == LOW)
-    {
-      buttonPressedIndicator++;
-      buttonPressedFunction(3);
-    }
-
+      buttonState = digitalRead(buttonPinNumber);
+      if (buttonState == LOW)
+      {
+        buttonPressedIndicator = beginnerModeDelay; 
+        buttonPressedFunction(buttonPinNumber);
+        if (ndebug == 1)
+        {
+          Serial.println("Button pressed - Breaking loop ***" );
+        };
+        break;
+      };
+    };
   };
+
+
 
 
   //#####################################################################################
