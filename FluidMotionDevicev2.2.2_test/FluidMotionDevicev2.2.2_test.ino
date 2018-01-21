@@ -43,7 +43,6 @@
 #include <Servo.h>
 #include <SoftwareSerial.h>
 
-
 Servo Sabertooth; // We'll name the Sabertooth object Sabertooth.
 // For how to configure the Sabertooth, see the DIP Switch Wizard for
 //   http://www.dimensionengineering.com/datasheets/SabertoothDIPWizard/start.htm
@@ -79,6 +78,7 @@ const byte ndebug      = 0; //*** 0=run (debug messages off) 1=debug messages on
 const byte accelFactor = 2; //*** accelerate increment                           **
 const byte decelFactor = 4; //*** decelerate increment                           **
 const byte trimSens    = 6;//*** trim sensitivity: 128 = highest sensitivity     **
+const byte beginnerModeDelay = 15; // changes how long beginner mode will go     **
 //*********************************************************************************
 
 // These constants shouldn't change.
@@ -149,23 +149,18 @@ void setup()
 
   Sabertooth.attach(1);
 
-  if (digitalRead(12) == LOW ) 
+  if (digitalRead(12) == LOW )
   { // To cycle this, power must also be cycled
     beginnerMode = true;
-
-   Serial.println("Beginner Mode: On");
-    // }
+    if (ndebug == 1) {
+      Serial.println("Beginner Mode: On");
+    }
   }
 
 };
 
-
-
 void loop()
 {
-
-
-
   // check throttle potentiometer setting:
   potValue = analogRead(A0);
 
@@ -207,7 +202,8 @@ void loop()
     buttonPressedIndicator = 0; // reset button pressed indicator
   }
 
-  if (buttonPressedIndicator > 0)
+
+  if (beginnerMode == true & buttonPressedIndicator > 0)
   {
     buttonPressedIndicator--;
   }
@@ -235,41 +231,26 @@ void loop()
     };
   };
 
-int index;
-int hysteresis;
 
   if (beginnerMode == true)
   {
-    buttonState = digitalRead(3); // Only reads forward button for beginner mode
-    Serial.print("Button State: ");
-    Serial.print(buttonState);
-    Serial.print("\n");
 
-
-    if (index <= 10)
+    for (buttonPinNumber = 2; buttonPinNumber <= 6; ++buttonPinNumber)
     {
-      index = 0;
-      hysteresis = 0;
-      Serial.print("\n Starting at the beginning of hysteresis");
-    }
-    
-        if (index > 10)  //XSZA
-    {
-      hysteresis += buttonState;
-    }
-
-    if (hysteresis < 10)
-    {
-      buttonState = LOW;
-    }
-
-    if (buttonState == LOW)
-    {
-      buttonPressedIndicator++;
-      buttonPressedFunction(3);
-    }
-
+      buttonState = digitalRead(buttonPinNumber);
+      if (buttonState == LOW)
+      {
+        buttonPressedIndicator = beginnerModeDelay; // This is the value to change for beginner mode
+        buttonPressedFunction(buttonPinNumber);
+        if (ndebug == 1)
+        {
+          Serial.println("Button pressed - Breaking loop ***" );
+        };
+        break;
+      };
+    };
   };
+
 
 
 

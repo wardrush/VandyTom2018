@@ -43,7 +43,6 @@
 #include <Servo.h>
 #include <SoftwareSerial.h>
 
-
 Servo Sabertooth; // We'll name the Sabertooth object Sabertooth.
 // For how to configure the Sabertooth, see the DIP Switch Wizard for
 //   http://www.dimensionengineering.com/datasheets/SabertoothDIPWizard/start.htm
@@ -149,21 +148,19 @@ void setup()
 
   Sabertooth.attach(1);
 
-  if (digitalRead(12) == LOW ) 
+  if (digitalRead(12) == LOW )
   { // To cycle this, power must also be cycled
     beginnerMode = true;
 
-   Serial.println("Beginner Mode: On");
-    // }
+    if (ndebug == 1) {
+      Serial.println("Beginner Mode: On");
+    }
   }
 
 };
 
-
-
 void loop()
 {
-
 
 
   // check throttle potentiometer setting:
@@ -207,6 +204,7 @@ void loop()
     buttonPressedIndicator = 0; // reset button pressed indicator
   }
 
+//XSZA maybe unnecessary
   if (buttonPressedIndicator > 0)
   {
     buttonPressedIndicator--;
@@ -235,32 +233,47 @@ void loop()
     };
   };
 
-int index;
-int hysteresis;
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   if (beginnerMode == true)
   {
-    buttonState = digitalRead(3); // Only reads forward button for beginner mode
-    Serial.print("Button State: ");
-    Serial.print(buttonState);
-    Serial.print("\n");
+
+    int index = 5;
+    int hysteresis[5] = {};
+    int runningSum = 5;
 
 
-    if (index <= 10)
+    if (index < 5 ) // While hysteresis is being built up
     {
-      index = 0;
-      hysteresis = 0;
-      Serial.print("\n Starting at the beginning of hysteresis");
+      buttonState = digitalRead(3); // Only reads forward button for beginner mode
+      Serial.print("Button State: ");
+      Serial.print(bool(buttonState));
+      Serial.print("\n");
+      
+      hysteresis[index] = (1 - bool(buttonState));
+      index++;
     }
-    
-        if (index > 10)  //XSZA
+
+    if (index = 5) // Once the variable is full
     {
-      hysteresis += buttonState;
+      for (int i = 0; i < 5; i++)
+      {
+        runningSum -= hysteresis[i];
+      }
     }
 
-    if (hysteresis < 10)
+
+    if (runningSum < 5)
     {
-      buttonState = LOW;
+      buttonState = LOW; // Digitally press the button
+
+      for (int i; i < 5; i++)
+      {
+        hysteresis[i] = 0; // Reset the variable. If slow, find alternative code method of doing this
+      }
+
+      runningSum = 5; // Reset runningSum to 5 for hysteresis subtraction
     }
 
     if (buttonState == LOW)
@@ -269,8 +282,7 @@ int hysteresis;
       buttonPressedFunction(3);
     }
 
-  };
-
+  } // End of beginner mode loop
 
 
   //#####################################################################################
