@@ -43,6 +43,7 @@
 #include <Servo.h>
 #include <SoftwareSerial.h>
 
+
 Servo Sabertooth; // We'll name the Sabertooth object Sabertooth.
 // For how to configure the Sabertooth, see the DIP Switch Wizard for
 //   http://www.dimensionengineering.com/datasheets/SabertoothDIPWizard/start.htm
@@ -152,20 +153,17 @@ void setup()
   { // To cycle this, power must also be cycled
     beginnerMode = true;
 
-    // if (ndebug == 1){
-    Serial.println("Beginner Mode: On");
+   Serial.println("Beginner Mode: On");
     // }
   }
 
 };
 
+
+
 void loop()
 {
-  if (beginnerMode = true)
-  {
-    int  index = 5;
-    int hysteresis = 5;
-  }
+
 
 
   // check throttle potentiometer setting:
@@ -272,6 +270,7 @@ int hysteresis;
     }
 
   };
+
 
 
   //#####################################################################################
